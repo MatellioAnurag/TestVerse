@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="TestVerse - Interactive visual galaxy for software testing tools and frameworks">
+  <meta name="author" content="Anurag Arora">
+  <title>TestVerse - Visual Testing Knowledge Galaxy</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes zoom-in-95 {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes slide-in-from-bottom-2 {
+      from { transform: translateY(0.5rem); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-in {
+      animation: fade-in 0.3s ease-out, zoom-in-95 0.3s ease-out;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Lucide Icons as inline SVG components
+    const Sparkles = ({ className = "w-6 h-6" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 3v18m9-9H3"/>
+        <path d="M16.5 7.5l-1 1m-7-1l1 1m6 6l1 1m-7 0l-1 1"/>
+      </svg>
+    );
+
+    const Search = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+      </svg>
+    );
+
+    const Info = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 16v-4m0-4h.01"/>
+      </svg>
+    );
+
+    const ExternalLink = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <path d="M15 3h6v6m-11 5L21 3"/>
+      </svg>
+    );
+
+    const X = ({ className = "w-6 h-6" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    );
+
+    const ChevronUp = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="m18 15-6-6-6 6"/>
+      </svg>
+    );
+
+    const ChevronDown = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="m6 9 6 6 6-6"/>
+      </svg>
+    );
+
+    const Filter = ({ className = "w-4 h-4" }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+    );
+
+    const TestVerse = () => {
+      const [selectedNode, setSelectedNode] = useState(null);
+      const [searchTerm, setSearchTerm] = useState('');
+      const [hoveredNode, setHoveredNode] = useState(null);
+      const [showLegend, setShowLegend] = useState(false);
+      const [licenseFilter, setLicenseFilter] = useState('all');
+
+      const nodes = [
+        {
+          id: 'browser-testing',
+          name: 'Browser (Web/UI)',
+          x: 15, y: 20, size: 70, color: '#00f5ff',
+          category: 'Functional Testing',
+          description: 'Check whether web-based applications work as expected',
+          moons: [
+            { name: 'Cypress', url: 'https://www.cypress.io/', isOpenSource: true },
+            { name: 'Playwright', url: 'https://playwright.dev/', isOpenSource: true },
+            { name: 'Selenium', url: 'https://www.selenium.dev/', isOpenSource: true },
+            { name: 'Robot Framework', url: 'https://robotframework.org/', isOpenSource: true },
+            { name: 'WebDriverIO', url: 'https://webdriver.io/', isOpenSource: true }
+          ]
+        },
+        {
+          id: 'unit-testing',
+          name: 'Unit Testing',
+          x: 20, y: 28, size: 62, color: '#64b5f6',
+          category: 'Functional Testing',
+          description: 'JavaScript/TypeScript testing frameworks for unit and component tests',
+          moons: [
+            { name: 'Jest', url: 'https://jestjs.io/', isOpenSource: true },
+            { name: 'Vitest', url: 'https://vitest.dev/', isOpenSource: true },
+            { name: 'Mocha', url: 'https://mochajs.org/', isOpenSource: true },
+            { name: 'Jasmine', url: 'https://jasmine.github.io/', isOpenSource: true },
+            { name: 'AVA', url: 'https://github.com/avajs/ava', isOpenSource: true }
+          ]
+        },
+        {
+          id: 'mobile-testing',
+          name: 'Mobile Testing',
+          x: 35, y: 25, size: 70, color: '#17d1aa',
+          category: 'Functional Testing',
+          description: 'Verify functionality and usability across mobile devices and OS',
+          moons: [
+            { name: 'Appium', url: 'https://appium.io/', isOpenSource: true },
+            { name: 'Espresso', url: 'https://developer.android.com/training/testing/espresso', isOpenSource: true },
+            { name: 'Detox', url: 'https://wix.github.io/Detox/', isOpenSource: true },
+            { name: 'Calabash', url: 'https://github.com/calabash/calabash-ios', isOpenSource: true },
+            { name: 'Maestro', url: 'https://maestro.mobile.dev/', isOpenSource: true },
+            { name: 'XCUITest', url: 'https://developer.apple.com/documentation/xctest', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'api-testing',
+          name: 'API Testing',
+          x: 25, y: 35, size: 75, color: '#ff6b9d',
+          category: 'Functional Testing',
+          description: 'Verify API meets expected functionality',
+          moons: [
+            { name: 'Postman/Newman', url: 'https://www.postman.com/', isOpenSource: true },
+            { name: 'Rest Assured', url: 'https://rest-assured.io/', isOpenSource: true },
+            { name: 'Cypress', url: 'https://www.cypress.io/', isOpenSource: true },
+            { name: 'Playwright', url: 'https://playwright.dev/', isOpenSource: true },
+            { name: 'Ready API', url: 'https://smartbear.com/product/ready-api/overview/', isOpenSource: false },
+            { name: 'WebTest Client', url: 'https://docs.spring.io/spring-framework/reference/testing/webtestclient.html', isOpenSource: true },
+            { name: 'Karate', url: 'https://karatelabs.github.io/karate/', isOpenSource: true },
+            { name: 'SuperTest', url: 'https://github.com/ladjs/supertest', isOpenSource: true },
+            { name: 'OkHttp3', url: 'https://square.github.io/okhttp/', isOpenSource: true }
+          ]
+        },
+        {
+          id: 'performance',
+          name: 'Performance',
+          x: 55, y: 20, size: 70, color: '#ffa726',
+          category: 'Non-Functional Testing',
+          description: 'Verify speed, scalability and reliability under load',
+          moons: [
+            { name: 'JMeter', url: 'https://jmeter.apache.org/', isOpenSource: true },
+            { name: 'Gatling', url: 'https://gatling.io/', isOpenSource: true },
+            { name: 'K6', url: 'https://k6.io/', isOpenSource: true },
+            { name: 'Neo Load', url: 'https://www.tricentis.com/products/performance-testing-neoload', isOpenSource: false },
+            { name: 'Load Runner', url: 'https://www.microfocus.com/en-us/products/loadrunner-professional/overview', isOpenSource: false },
+            { name: 'Loadview', url: 'https://www.loadview-testing.com/', isOpenSource: false },
+            { name: 'Locust', url: 'https://locust.io/', isOpenSource: true }
+          ]
+        },
+        {
+          id: 'security',
+          name: 'Security Testing',
+          x: 75, y: 25, size: 65, color: '#e74c3c',
+          category: 'Non-Functional Testing',
+          description: 'Identify vulnerabilities and security risks',
+          moons: [
+            { name: 'Burp Suite', url: 'https://portswigger.net/burp', isOpenSource: false },
+            { name: 'SQL Map', url: 'https://sqlmap.org/', isOpenSource: true },
+            { name: 'Veracode', url: 'https://www.veracode.com/', isOpenSource: false },
+            { name: 'NMap', url: 'https://nmap.org/', isOpenSource: true },
+            { name: 'Pynt', url: 'https://www.pynt.io/', isOpenSource: false },
+            { name: 'ZAP', url: 'https://www.zaproxy.org/', isOpenSource: true }
+          ]
+        },
+        {
+          id: 'accessibility',
+          name: 'Accessibility',
+          x: 65, y: 35, size: 60, color: '#9c27b0',
+          category: 'Non-Functional Testing',
+          description: 'Tools to ensure applications are accessible to all users',
+          moons: [
+            { name: 'Axe', url: 'https://www.deque.com/axe/', isOpenSource: true },
+            { name: 'Lighthouse', url: 'https://developer.chrome.com/docs/lighthouse/', isOpenSource: true },
+            { name: 'TestCraft', url: 'https://home.testcraft.app/', isOpenSource: true },
+            { name: 'WAVE', url: 'https://wave.webaim.org/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'cross-browser',
+          name: 'Cross-Browser',
+          x: 15, y: 50, size: 60, color: '#3f51b5',
+          category: 'Platform-Specific',
+          description: 'Test across different browsers and environments',
+          moons: [
+            { name: 'LambdaTest', url: 'https://www.lambdatest.com/', isOpenSource: false },
+            { name: 'BrowserStack', url: 'https://www.browserstack.com/', isOpenSource: false },
+            { name: 'SauceLabs', url: 'https://saucelabs.com/', isOpenSource: false },
+            { name: 'TestSigma', url: 'https://testsigma.com/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'cloud-testing',
+          name: 'Cloud Based Testing Platforms',
+          x: 30, y: 55, size: 58, color: '#2196f3',
+          category: 'Platform-Specific',
+          description: 'Cloud-based testing platforms',
+          moons: [
+            { name: 'Perfecto', url: 'https://www.perfecto.io/', isOpenSource: false },
+            { name: 'TestGrid', url: 'https://www.testgrid.io/', isOpenSource: false },
+            { name: 'BitBar', url: 'https://bitbar.com/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'etl',
+          name: 'ETL/Data Testing',
+          x: 55, y: 50, size: 62, color: '#00bcd4',
+          category: 'Data & Integration',
+          description: 'Ensure data pipeline and transformation correctness',
+          moons: [
+            { name: 'QuerySurge', url: 'https://www.querysurge.com/', isOpenSource: false },
+            { name: 'Talend', url: 'https://www.talend.com/', isOpenSource: true },
+            { name: 'DataQ', url: 'https://www.gartner.com/reviews/market/data-quality-tools', isOpenSource: false },
+            { name: 'Informatica Power Center', url: 'https://www.informatica.com/products/data-integration/powercenter.html', isOpenSource: false },
+            { name: 'Right Data', url: 'https://www.infogix.com/', isOpenSource: false },
+            { name: 'Integrate.io', url: 'https://www.integrate.io/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'database',
+          name: 'Database',
+          x: 72, y: 50, size: 62, color: '#009688',
+          category: 'Data & Integration',
+          description: 'Database systems and testing tools',
+          moons: [
+            { name: 'DbUnit', url: 'https://www.dbunit.org/', isOpenSource: true },
+            { name: 'SQLTest', url: 'https://www.red-gate.com/products/sql-development/sql-test/', isOpenSource: false },
+            { name: 'MongoDB', url: 'https://www.mongodb.com/', isOpenSource: true },
+            { name: 'Apache Cassandra', url: 'https://cassandra.apache.org/', isOpenSource: true },
+            { name: 'MySQL', url: 'https://www.mysql.com/', isOpenSource: true },
+            { name: 'Apache CouchDB', url: 'https://couchdb.apache.org/', isOpenSource: true },
+            { name: 'Neo4j', url: 'https://neo4j.com/', isOpenSource: true },
+            { name: 'Redis', url: 'https://redis.io/', isOpenSource: true },
+            { name: 'Oracle Database', url: 'https://www.oracle.com/database/', isOpenSource: false },
+            { name: 'PostgreSQL', url: 'https://www.postgresql.org/', isOpenSource: true },
+            { name: 'Microsoft SQL Server', url: 'https://www.microsoft.com/en-us/sql-server', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'test-management',
+          name: 'Test Management',
+          x: 15, y: 70, size: 62, color: '#4caf50',
+          category: 'Test Management',
+          description: 'Organize test planning, execution and tracking',
+          moons: [
+            { name: 'TestRail', url: 'https://www.testrail.com/', isOpenSource: false },
+            { name: 'XRay', url: 'https://www.getxray.app/', isOpenSource: false },
+            { name: 'Zephyr Enterprise', url: 'https://smartbear.com/test-management/zephyr-enterprise/', isOpenSource: false },
+            { name: 'Quality Center', url: 'https://www.microfocus.com/en-us/products/alm-quality-center/overview', isOpenSource: false },
+            { name: 'testmo', url: 'https://www.testmo.com/', isOpenSource: false },
+            { name: 'Qase', url: 'https://qase.io/', isOpenSource: false },
+            { name: 'PractiTest', url: 'https://www.practitest.com/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'bug-tracking',
+          name: 'Bug Tracking',
+          x: 32, y: 75, size: 58, color: '#ff9800',
+          category: 'Test Management',
+          description: 'Track and manage bugs in single platform',
+          moons: [
+            { name: 'JIRA', url: 'https://www.atlassian.com/software/jira', isOpenSource: false },
+            { name: 'BugZilla', url: 'https://www.bugzilla.org/', isOpenSource: true },
+            { name: 'Mantis', url: 'https://www.mantisbt.org/', isOpenSource: true },
+            { name: 'Rollbar', url: 'https://rollbar.com/', isOpenSource: false },
+            { name: 'Bugasura', url: 'https://bugasura.io/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'cicd',
+          name: 'CI/CD',
+          x: 50, y: 70, size: 75, color: '#8bc34a',
+          category: 'CI/CD & DevOps',
+          description: 'Automate development, deployment, and testing',
+          moons: [
+            { name: 'Jenkins', url: 'https://www.jenkins.io/', isOpenSource: true },
+            { name: 'GitHub Actions', url: 'https://github.com/features/actions', isOpenSource: false },
+            { name: 'GitLab', url: 'https://about.gitlab.com/', isOpenSource: true },
+            { name: 'Azure DevOps', url: 'https://azure.microsoft.com/en-us/products/devops', isOpenSource: false },
+            { name: 'Circle CI', url: 'https://circleci.com/', isOpenSource: false },
+            { name: 'Bitrise', url: 'https://bitrise.io/', isOpenSource: false },
+            { name: 'TeamCity', url: 'https://www.jetbrains.com/teamcity/', isOpenSource: false },
+            { name: 'Bamboo', url: 'https://www.atlassian.com/software/bamboo', isOpenSource: false },
+            { name: 'BitBucket', url: 'https://bitbucket.org/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'version-control',
+          name: 'Version Control',
+          x: 68, y: 70, size: 58, color: '#673ab7',
+          category: 'CI/CD & DevOps',
+          description: 'Manage changes to source code over time',
+          moons: [
+            { name: 'Git', url: 'https://git-scm.com/', isOpenSource: true },
+            { name: 'Azure DevOps', url: 'https://azure.microsoft.com/en-us/products/devops', isOpenSource: false },
+            { name: 'SVN', url: 'https://subversion.apache.org/', isOpenSource: true },
+            { name: 'AWS Code Commit', url: 'https://aws.amazon.com/codecommit/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'containerization',
+          name: 'Containers',
+          x: 58, y: 82, size: 55, color: '#03a9f4',
+          category: 'CI/CD & DevOps',
+          description: 'Container orchestration platforms',
+          moons: [
+            { name: 'Docker', url: 'https://www.docker.com/', isOpenSource: true },
+            { name: 'Kubernetes', url: 'https://kubernetes.io/', isOpenSource: true },
+            { name: 'OpenShift', url: 'https://www.redhat.com/en/technologies/cloud-computing/openshift', isOpenSource: true }
+          ]
+        },
+        {
+          id: 'visual-testing',
+          name: 'Visual Testing',
+          x: 85, y: 40, size: 58, color: '#e91e63',
+          category: 'Automation Enhancers',
+          description: 'Detect visual regressions and UI changes',
+          moons: [
+            { name: 'Applitools', url: 'https://applitools.com/', isOpenSource: false },
+            { name: 'Percy', url: 'https://percy.io/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'ai-testing',
+          name: 'AI-Powered Testing',
+          x: 88, y: 55, size: 62, color: '#e056fd',
+          category: 'Automation Enhancers',
+          description: 'AI and ML-powered testing tools',
+          moons: [
+            { name: 'Testim', url: 'https://www.testim.io/', isOpenSource: false },
+            { name: 'Mabl', url: 'https://www.mabl.com/', isOpenSource: false },
+            { name: 'Functionize', url: 'https://www.functionize.com/', isOpenSource: false },
+            { name: 'Postman Postbot', url: 'https://www.postman.com/product/postbot/', isOpenSource: false },
+            { name: 'KushoAI', url: 'https://kusho.ai/', isOpenSource: false },
+            { name: 'TestCraft', url: 'https://www.testcraft.io/', isOpenSource: false },
+            { name: 'PlayWright Agents/MCP', url: 'https://playwright.dev/docs/release-notes', isOpenSource: true },
+            { name: 'testRigor', url: 'https://testrigor.com/', isOpenSource: false },
+            { name: 'CodeRabbit', url: 'https://coderabbit.ai/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'codeless',
+          name: 'Codeless Tools',
+          x: 85, y: 70, size: 58, color: '#ff5722',
+          category: 'Automation Enhancers',
+          description: 'No-code automation solutions',
+          moons: [
+            { name: 'Cypress Studio', url: 'https://docs.cypress.io/guides/references/cypress-studio', isOpenSource: true },
+            { name: 'TestSigma', url: 'https://testsigma.com/', isOpenSource: false },
+            { name: 'TestRigor', url: 'https://testrigor.com/', isOpenSource: false },
+            { name: 'Katalon Studio', url: 'https://katalon.com/', isOpenSource: false },
+            { name: 'AccelQ', url: 'https://www.accelq.com/', isOpenSource: false },
+            { name: 'Playwright Codegen', url: 'https://playwright.dev/docs/codegen', isOpenSource: true },
+            { name: 'TOSCA', url: 'https://www.tricentis.com/products/automate-continuous-testing-tosca', isOpenSource: false },
+            { name: 'Provar', url: 'https://www.provartesting.com/', isOpenSource: false },
+            { name: 'UIPath Test Suite', url: 'https://www.uipath.com/product/test-suite', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'bdd',
+          name: 'BDD Frameworks',
+          x: 8, y: 35, size: 52, color: '#795548',
+          category: 'Methodologies',
+          description: 'Behaviour Driven Development',
+          moons: [
+            { name: 'Cucumber', url: 'https://cucumber.io/', isOpenSource: true },
+            { name: 'JBehave', url: 'https://jbehave.org/', isOpenSource: true },
+            { name: 'Quantum', url: 'https://github.com/Perfecto-Quantum/Quantum', isOpenSource: true },
+            { name: 'Serenity', url: 'https://serenity-bdd.github.io/', isOpenSource: true }
+          ]
+        },
+        {
+          id: 'ide',
+          name: 'IDEs & Editors',
+          x: 45, y: 88, size: 55, color: '#607d8b',
+          category: 'Development Tools',
+          description: 'Code editors and development environments',
+          moons: [
+            { name: 'IntelliJ', url: 'https://www.jetbrains.com/idea/', isOpenSource: false },
+            { name: 'Eclipse', url: 'https://www.eclipse.org/', isOpenSource: true },
+            { name: 'VS Code', url: 'https://code.visualstudio.com/', isOpenSource: true },
+            { name: 'WebStorm', url: 'https://www.jetbrains.com/webstorm/', isOpenSource: false },
+            { name: 'PyCharm', url: 'https://www.jetbrains.com/pycharm/', isOpenSource: false },
+            { name: 'VIM', url: 'https://www.vim.org/', isOpenSource: true },
+            { name: 'Notepad++', url: 'https://notepad-plus-plus.org/', isOpenSource: true },
+            { name: 'JetBrains Aqua', url: 'https://www.jetbrains.com/aqua/', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'code-quality',
+          name: 'Code Quality',
+          x: 28, y: 88, size: 50, color: '#9e9e9e',
+          category: 'Development Tools',
+          description: 'Code inspection and quality tools',
+          moons: [
+            { name: 'SonarQube', url: 'https://www.sonarsource.com/products/sonarqube/', isOpenSource: true },
+            { name: 'PMD', url: 'https://pmd.github.io/', isOpenSource: true },
+            { name: 'VeraCode SAST', url: 'https://www.veracode.com/products/binary-static-analysis-sast', isOpenSource: false }
+          ]
+        },
+        {
+          id: 'reporting',
+          name: 'Reporting',
+          x: 75, y: 85, size: 52, color: '#4db6ac',
+          category: 'Observability',
+          description: 'Generate test execution reports',
+          moons: [
+            { name: 'Allure Report', url: 'https://allurereport.org/', isOpenSource: true },
+            { name: 'Cucumber HTML', url: 'https://cucumber.io/docs/cucumber/reporting/', isOpenSource: true },
+            { name: 'Mochawesome', url: 'https://github.com/adamgruber/mochawesome', isOpenSource: true },
+            { name: 'Extent Reports', url: 'https://www.extentreports.com/', isOpenSource: true },
+            { name: 'MasterThought', url: 'https://github.com/damianszczepanik/cucumber-reporting', isOpenSource: true }
+          ]
+        },
+        {
+          id: 'logging',
+          name: 'Logging',
+          x: 88, y: 85, size: 50, color: '#66bb6a',
+          category: 'Observability',
+          description: 'Configure and view logs from different sources',
+          moons: [
+            { name: 'Datadog', url: 'https://www.datadoghq.com/', isOpenSource: false },
+            { name: 'Splunk', url: 'https://www.splunk.com/', isOpenSource: false },
+            { name: 'Mezmo', url: 'https://www.mezmo.com/', isOpenSource: false },
+            { name: 'Graylog', url: 'https://graylog.org/', isOpenSource: true },
+            { name: 'Kibana', url: 'https://www.elastic.co/kibana', isOpenSource: true },
+            { name: 'Grafana', url: 'https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/logs/', isOpenSource: true }
+          ]
+        },
+        {
+          id: 'debugging',
+          name: 'HTTP Debug',
+          x: 8, y: 82, size: 48, color: '#ef5350',
+          category: 'Development Tools',
+          description: 'HTTP traffic debugging tools',
+          moons: [
+            { name: 'Charles Proxy', url: 'https://www.charlesproxy.com/', isOpenSource: false },
+            { name: 'Fiddler', url: 'https://www.telerik.com/fiddler', isOpenSource: false },
+            { name: 'Proxyman', url: 'https://proxyman.io/', isOpenSource: false },
+            { name: 'Http ToolKit', url: 'https://httptoolkit.com/', isOpenSource: true }
+          ]
+        },
+        {
+          id: 'cloud',
+          name: 'Cloud Platforms',
+          x: 12, y: 88, size: 52, color: '#42a5f5',
+          category: 'Infrastructure',
+          description: 'Cloud service providers',
+          moons: [
+            { name: 'AWS', url: 'https://aws.amazon.com/', isOpenSource: false },
+            { name: 'Google Cloud', url: 'https://cloud.google.com/', isOpenSource: false },
+            { name: 'IBM Cloud', url: 'https://www.ibm.com/cloud', isOpenSource: false },
+            { name: 'Microsoft Azure', url: 'https://azure.microsoft.com/', isOpenSource: false }
+          ]
+        }
+      ];
+
+      const connections = [
+        { from: 'browser-testing', to: 'mobile-testing' },
+        { from: 'browser-testing', to: 'api-testing' },
+        { from: 'browser-testing', to: 'unit-testing' },
+        { from: 'unit-testing', to: 'api-testing' },
+        { from: 'mobile-testing', to: 'api-testing' },
+        { from: 'browser-testing', to: 'bdd' },
+        { from: 'performance', to: 'security' },
+        { from: 'security', to: 'accessibility' },
+        { from: 'cross-browser', to: 'browser-testing' },
+        { from: 'cloud-testing', to: 'mobile-testing' },
+        { from: 'cross-browser', to: 'cloud-testing' },
+        { from: 'etl', to: 'database' },
+        { from: 'database', to: 'api-testing' },
+        { from: 'cicd', to: 'version-control' },
+        { from: 'cicd', to: 'containerization' },
+        { from: 'cicd', to: 'browser-testing' },
+        { from: 'cicd', to: 'api-testing' },
+        { from: 'cicd', to: 'mobile-testing' },
+        { from: 'visual-testing', to: 'browser-testing' },
+        { from: 'ai-testing', to: 'codeless' },
+        { from: 'codeless', to: 'browser-testing' },
+        { from: 'test-management', to: 'bug-tracking' },
+        { from: 'test-management', to: 'cicd' },
+        { from: 'reporting', to: 'logging' },
+        { from: 'ide', to: 'code-quality' },
+        { from: 'debugging', to: 'api-testing' },
+        { from: 'containerization', to: 'cloud' }
+      ];
+
+      const filteredNodes = searchTerm 
+        ? nodes.filter(node => 
+            node.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            node.moons.some(moon => moon.name.toLowerCase().includes(searchTerm.toLowerCase()))
+          )
+        : nodes;
+
+      const handleToolClick = (url) => {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      };
+
+      useEffect(() => {
+        const handleEsc = (e) => {
+          if (e.key === 'Escape') setSelectedNode(null);
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+      }, []);
+
+      const categories = [
+        'Functional Testing', 'Non-Functional Testing', 'Platform-Specific',
+        'Data & Integration', 'Test Management', 'CI/CD & DevOps',
+        'Automation Enhancers', 'Methodologies', 'Development Tools',
+        'Observability', 'Infrastructure'
+      ];
+
+      const getFilteredMoons = (moons) => {
+        if (licenseFilter === 'all') return moons;
+        if (licenseFilter === 'open-source') return moons.filter(m => m.isOpenSource);
+        if (licenseFilter === 'commercial') return moons.filter(m => !m.isOpenSource);
+        return moons;
+      };
+
+      const displayedNode = selectedNode ? {
+        ...selectedNode,
+        moons: getFilteredMoons(selectedNode.moons)
+      } : null;
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 text-white overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 z-30 bg-black/40 backdrop-blur-xl border-b border-white/10">
+            <div className="max-w-7xl mx-auto px-6 py-5">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Sparkles className="w-6 h-6 text-cyan-400" />
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                      TestVerse
+                    </h1>
+                  </div>
+                  <p className="text-sm text-gray-300">
+                    Explore the Testing Universe — See how everything connects in the world of software testing
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Based on Software Testing Ecosystem
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search tools, frameworks..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-cyan-400/50 w-72"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative w-full h-screen pt-32">
+            <svg className="absolute inset-0 w-full h-full">
+              <defs>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {connections.map((conn, i) => {
+                const fromNode = nodes.find(n => n.id === conn.from);
+                const toNode = nodes.find(n => n.id === conn.to);
+                if (!fromNode || !toNode) return null;
+                
+                const show = !searchTerm || (filteredNodes.includes(fromNode) && filteredNodes.includes(toNode));
+                
+                return (
+                  <line
+                    key={i}
+                    x1={`${fromNode.x}%`}
+                    y1={`${fromNode.y}%`}
+                    x2={`${toNode.x}%`}
+                    y2={`${toNode.y}%`}
+                    stroke="rgba(100, 255, 255, 0.12)"
+                    strokeWidth="1"
+                    strokeDasharray="3,3"
+                    className={`transition-opacity duration-300 ${show ? 'opacity-100' : 'opacity-0'}`}
+                  />
+                );
+              })}
+
+              {nodes.map((node) => {
+                const isVisible = !searchTerm || filteredNodes.includes(node);
+                const isSelected = selectedNode?.id === node.id;
+                const isHovered = hoveredNode === node.id;
+                
+                return (
+                  <g key={node.id} className={`transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-20'}`}>
+                    <circle
+                      cx={`${node.x}%`}
+                      cy={`${node.y}%`}
+                      r={isSelected ? node.size * 0.75 : node.size * 0.65}
+                      fill="none"
+                      stroke={node.color}
+                      strokeWidth="1"
+                      opacity="0.25"
+                      filter="url(#glow)"
+                      className="transition-all duration-300"
+                    />
+                    
+                    <circle
+                      cx={`${node.x}%`}
+                      cy={`${node.y}%`}
+                      r={isSelected ? node.size * 0.55 : isHovered ? node.size * 0.5 : node.size * 0.45}
+                      fill={node.color}
+                      opacity="0.2"
+                      className="cursor-pointer transition-all duration-300"
+                      onClick={() => setSelectedNode(node)}
+                      onMouseEnter={() => setHoveredNode(node.id)}
+                      onMouseLeave={() => setHoveredNode(null)}
+                    />
+                    
+                    <circle
+                      cx={`${node.x}%`}
+                      cy={`${node.y}%`}
+                      r={isSelected ? node.size * 0.35 : isHovered ? node.size * 0.3 : node.size * 0.25}
+                      fill={node.color}
+                      opacity="0.6"
+                      filter="url(#glow)"
+                      className="cursor-pointer transition-all duration-300 pointer-events-none"
+                    />
+                    
+                    <text
+                      x={`${node.x}%`}
+                      y={`${node.y + 6}%`}
+                      textAnchor="middle"
+                      className="text-[10px] font-semibold pointer-events-none select-none"
+                      fill="white"
+                      opacity={isHovered || isSelected ? "1" : "0.85"}
+                    >
+                      {node.name}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+
+            {displayedNode && (
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+                <div className="bg-gradient-to-br from-slate-900/95 to-purple-900/95 backdrop-blur-xl border-2 border-white/20 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden animate-in">
+                  <div className="bg-black/30 border-b border-white/10 p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div 
+                            className="w-4 h-4 rounded-full shadow-lg"
+                            style={{ backgroundColor: displayedNode.color, boxShadow: `0 0 15px ${displayedNode.color}` }}
+                          />
+                          <h3 className="text-3xl font-bold">{displayedNode.name}</h3>
+                        </div>
+                        <span className="text-xs text-cyan-400 uppercase tracking-wider font-semibold">{displayedNode.category}</span>
+                        <p className="text-sm text-gray-300 mt-3 leading-relaxed">{displayedNode.description}</p>
+                      </div>
+                      <button
+                        onClick={() => setSelectedNode(null)}
+                        className="text-gray-400 hover:text-white hover:bg-white/10 transition-all p-2 rounded-lg ml-4"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 mt-4">
+                      <Filter className="w-4 h-4 text-gray-400" />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setLicenseFilter('all')}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                            licenseFilter === 'all'
+                              ? 'bg-cyan-500 text-white'
+                              : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                          }`}
+                        >
+                          All ({selectedNode.moons.length})
+                        </button>
+                        <button
+                          onClick={() => setLicenseFilter('open-source')}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                            licenseFilter === 'open-source'
+                              ? 'bg-green-500 text-white'
+                              : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                          }`}
+                        >
+                          Open Source ({selectedNode.moons.filter(m => m.isOpenSource).length})
+                        </button>
+                        <button
+                          onClick={() => setLicenseFilter('commercial')}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                            licenseFilter === 'commercial'
+                              ? 'bg-purple-500 text-white'
+                              : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                          }`}
+                        >
+                          Commercial ({selectedNode.moons.filter(m => !m.isOpenSource).length})
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 overflow-y-auto max-h-[calc(80vh-250px)]">
+                    <div className="flex items-center gap-2 text-sm text-gray-300 mb-4">
+                      <Info className="w-4 h-4 text-cyan-400" />
+                      <span className="font-semibold">{displayedNode.moons.length} Tools & Frameworks</span>
+                      <span className="text-gray-500">— Click to visit official page</span>
+                    </div>
+                    
+                    {displayedNode.moons.length === 0 ? (
+                      <div className="text-center py-8 text-gray-400">
+                        No tools match the selected filter
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {displayedNode.moons.map((moon, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handleToolClick(moon.url)}
+                            className="bg-white/5 hover:bg-white/10 rounded-xl px-4 py-3 border border-white/10 hover:border-cyan-400/50 transition-all cursor-pointer group text-left w-full"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 flex-1">
+                                <span className="text-sm font-medium group-hover:text-cyan-400 transition-colors">
+                                  {moon.name}
+                                </span>
+                                {moon.isOpenSource && (
+                                  <span className="text-[10px] px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded border border-green-500/30">
+                                    OSS
+                                  </span>
+                                )}
+                              </div>
+                              <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-cyan-400 transition-colors flex-shrink-0" />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="absolute bottom-4 left-4 z-20">
+            <button 
+              onClick={() => setShowLegend(!showLegend)}
+              className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-xl px-4 py-2 flex items-center gap-2 hover:bg-black/50 transition-all"
+            >
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                {nodes.length} Categories • {nodes.reduce((acc, n) => acc + n.moons.length, 0)} Tools
+              </span>
+              {showLegend ? <ChevronDown /> : <ChevronUp />}
+            </button>
+            
+            {showLegend && (
+              <div className="mt-2 bg-black/40 backdrop-blur-xl border border-white/20 rounded-xl p-4 max-w-md" style={{ animation: 'fade-in 0.2s, slide-in-from-bottom-2 0.2s' }}>
+                <div className="text-xs text-gray-400 mb-3 font-semibold uppercase tracking-wider">Categories</div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  {categories.map((cat) => {
+                    const node = nodes.find(n => n.category === cat);
+                    if (!node) return null;
+                    return (
+                      <div key={cat} className="flex items-center gap-2">
+                        <div 
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: node.color }}
+                        />
+                        <span className="text-xs text-gray-300 truncate">{cat}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<TestVerse />);
+  </script>
+</body>
+</html>
